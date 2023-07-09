@@ -22,3 +22,15 @@ func (sr *StoreRepository) Save(user *model.User) error {
 
 	return err
 }
+
+func (sr *StoreRepository) CheckForAccepted(userId string) (bool, error) {
+	var isAccepted bool
+
+	const query = `select u.accepted from users u where u.id = $1 `
+
+	row := sr.db.QueryRow(query, userId)
+
+	err := row.Scan(&isAccepted)
+
+	return isAccepted, err
+}

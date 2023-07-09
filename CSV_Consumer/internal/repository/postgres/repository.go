@@ -7,6 +7,7 @@ import (
 
 type Store interface {
 	Save(user *model.User) error
+	CheckForAccepted(userId string) (bool, error)
 }
 
 type Repository struct {

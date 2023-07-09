@@ -62,14 +62,20 @@ func (r *RabbitConnection) ConsumeQueue(queueName string, repo postgres.Store) e
 				log.Printf("Ошибка преобразования csv-like строки в структуру: %v", err)
 			}
 
-			if err := consumer.storeRepository.Save(user); err != nil {
-				log.Printf("Ошибка при сохранении пользователя в базу: %v", err)
+			if isAccepted, err := consumer.storeRepository.CheckForAccepted(user.Id); !isAccepted {
+				if err := consumer.storeRepository.Save(user); err != nil {
+					log.Printf("Ошибка при сохранении пользователя в базу: %v", err)
+				}
+				message.Ack(false)
+			} else {
+				switch err {
+				case nil:
+					continue
+				default:
+					log.Printf("Ошибка при проверке статуса доставки: %v", err)
+				}
 			}
 
-			err = message.Ack(false)
-			if err != nil {
-				log.Printf("Ack error: %v", err)
-			}
 		}
 	}()
 
