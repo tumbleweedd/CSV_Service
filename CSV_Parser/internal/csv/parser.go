@@ -2,7 +2,7 @@ package csv
 
 import (
 	"encoding/csv"
-	"github.com/tumbleweedd/intership/CSV_Parser/internal/rabbitmq"
+	"github.com/tumbleweedd/intership/CSV_Parser/pkg/rabbitmq"
 	"io"
 	"log"
 	"os"
@@ -10,7 +10,7 @@ import (
 	"sync"
 )
 
-func ParseCSV(fileSource string, rabbitMQDSN string, wg *sync.WaitGroup, done <-chan struct{}) {
+func ParseCSV(fileSource string, rabbitCon *rabbitmq.RabbitConnection, wg *sync.WaitGroup, done <-chan struct{}) {
 	defer wg.Done()
 
 	file, err := os.Open(fileSource)
@@ -22,12 +22,12 @@ func ParseCSV(fileSource string, rabbitMQDSN string, wg *sync.WaitGroup, done <-
 
 	reader := csv.NewReader(file)
 
-	rabbit, err := rabbitmq.NewRabbitMQConnection(rabbitMQDSN)
+	producer := rabbitmq.NewProducer(rabbitCon)
 	if err != nil {
 		log.Printf("Ошибка при инициализации RabbitConnection: %v", err)
 		return
 	}
-	defer rabbit.Close()
+
 	queueName := strings.Split(fileSource, "\\")
 	log.Println(queueName)
 
@@ -46,7 +46,7 @@ func ParseCSV(fileSource string, rabbitMQDSN string, wg *sync.WaitGroup, done <-
 				continue
 			}
 
-			err = rabbit.SendToQueue(queueName[2], record)
+			err = producer.SendToQueue(queueName[2], record)
 			if err != nil {
 				log.Printf("Ошибка %v при занесении в очередь файла: %s", err, fileSource)
 			}

@@ -2,6 +2,8 @@ package app
 
 import (
 	"github.com/tumbleweedd/intership/CSV_Parser/internal/csv"
+	"github.com/tumbleweedd/intership/CSV_Parser/pkg/rabbitmq"
+	"log"
 	"os"
 	"path/filepath"
 	"sync"
@@ -23,9 +25,16 @@ func Run() {
 	done := make(chan struct{})
 	defer close(done)
 
+	initRabbitCon, err := rabbitmq.NewRabbitMQConnection(rabbitDSN)
+	defer initRabbitCon.Close()
+	if err != nil {
+		log.Printf("Ошибка при инициализации RabbitConnection: %v", err)
+		return
+	}
+
 	for _, file := range files {
 		wg.Add(1)
-		go csv.ParseCSV(file, rabbitDSN, wg, done)
+		go csv.ParseCSV(file, initRabbitCon, wg, done)
 	}
 
 	wg.Wait()

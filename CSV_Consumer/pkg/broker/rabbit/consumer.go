@@ -1,44 +1,28 @@
-package rabbitmq
+package rabbit
 
 import (
 	"encoding/csv"
 	"fmt"
-	"github.com/streadway/amqp"
 	"github.com/tumbleweedd/intership/CSV_Consumer/internal/model"
-	"github.com/tumbleweedd/intership/CSV_Consumer/internal/repository/postgres"
+	"github.com/tumbleweedd/intership/CSV_Consumer/internal/repository"
 	"log"
 	"strings"
 )
 
-type RabbitConnection struct {
-	con *amqp.Connection
-	ch  *amqp.Channel
+type Consumer struct {
+	rabbitConn      *RabbitConnection
+	storeRepository repository.Store
 }
 
-func NewRabbitMQConnection(conURI string) (*RabbitConnection, error) {
-	connectRabbitMQ, err := amqp.Dial(conURI)
-	if err != nil {
-		return nil, err
+func NewConsumer(rabbitConn *RabbitConnection, repo repository.Store) *Consumer {
+	return &Consumer{
+		rabbitConn:      rabbitConn,
+		storeRepository: repo,
 	}
-
-	channelRabbitMQ, err := connectRabbitMQ.Channel()
-	if err != nil {
-		return nil, err
-	}
-
-	return &RabbitConnection{
-		con: connectRabbitMQ,
-		ch:  channelRabbitMQ,
-	}, nil
 }
 
-func (r *RabbitConnection) Close() {
-	r.ch.Close()
-	r.con.Close()
-}
-
-func (r *RabbitConnection) ConsumeQueue(queueName string, repo postgres.Store) error {
-	messages, err := r.ch.Consume(
+func (c *Consumer) ConsumeQueue(queueName string) error {
+	messages, err := c.rabbitConn.ch.Consume(
 		queueName,
 		"",
 		false,
@@ -52,8 +36,6 @@ func (r *RabbitConnection) ConsumeQueue(queueName string, repo postgres.Store) e
 		return err
 	}
 
-	consumer := NewConsumer(r, repo)
-
 	go func() {
 		for message := range messages {
 
@@ -62,8 +44,8 @@ func (r *RabbitConnection) ConsumeQueue(queueName string, repo postgres.Store) e
 				log.Printf("Ошибка преобразования csv-like строки в структуру: %v", err)
 			}
 
-			if isAccepted, err := consumer.storeRepository.CheckForAccepted(user.Id); !isAccepted {
-				if err := consumer.storeRepository.Save(user); err != nil {
+			if isAccepted, err := c.storeRepository.CheckForAccepted(user.Id); !isAccepted {
+				if err := c.storeRepository.Save(user); err != nil {
 					log.Printf("Ошибка при сохранении пользователя в базу: %v", err)
 				}
 				message.Ack(false)

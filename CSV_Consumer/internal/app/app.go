@@ -3,7 +3,9 @@ package app
 import (
 	"github.com/spf13/viper"
 	"github.com/tumbleweedd/intership/CSV_Consumer/internal/csv"
-	"github.com/tumbleweedd/intership/CSV_Consumer/internal/repository/postgres"
+	"github.com/tumbleweedd/intership/CSV_Consumer/internal/repository"
+	"github.com/tumbleweedd/intership/CSV_Consumer/pkg/broker/rabbit"
+	postgres2 "github.com/tumbleweedd/intership/CSV_Consumer/pkg/database/postgres"
 	myLogger "github.com/tumbleweedd/intership/CSV_Consumer/pkg/logger"
 	"os"
 	"path/filepath"
@@ -33,7 +35,7 @@ func Run() {
 
 	wg := &sync.WaitGroup{}
 
-	db, err := postgres.NewPostgresDB(&postgres.Config{
+	db, err := postgres2.NewPostgresDB(&postgres2.Config{
 		PgPort:    viper.GetString("db.port"),
 		PgHost:    viper.GetString("db.host"),
 		PgDBName:  viper.GetString("db.dbname"),
@@ -45,11 +47,17 @@ func Run() {
 		logger.Fatalf("failed to initialize db: %s", err.Error())
 	}
 
-	repo := postgres.NewStorage(db)
+	repo := repository.NewStorage(db)
+	initRabbitCon, err := rabbit.NewRabbitMQConnection(rabbitDSN)
+	defer initRabbitCon.Close()
+	if err != nil {
+		logger.Infof("Ошибка при инициализации RabbitConnection: %s", err.Error())
+		return
+	}
 
 	for _, file := range files {
 		wg.Add(1)
-		go csv.Process(file, rabbitDSN, done, repo, logger)
+		go csv.Process(file, initRabbitCon, done, repo, logger)
 	}
 
 	wg.Wait()
