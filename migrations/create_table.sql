@@ -1,4 +1,4 @@
-create table users
+create table if not exists users
 (
     id           varchar primary key,
     full_name    varchar(50) not null,

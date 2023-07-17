@@ -1,0 +1,30 @@
+version: '3'
+services:
+  service1:
+    build:
+      context: ./CSV_Parser
+      dockerfile: Dockerfile
+    depends_on:
+      - rabbitmq
+    volumes:
+      - ./data:/app/csv_files
+  service2:
+    build:
+      context: ./CSV_Consumer
+      dockerfile: Dockerfile
+    depends_on:
+      - rabbitmq
+      - postgres
+    volumes:
+      - ./migrations:/app/migrations
+      - ./data:/app/csv_files
+  rabbitmq:
+    image: rabbitmq:3.9
+  postgres:
+    image: postgres:13
+    environment:
+      POSTGRES_USER: my_user
+      POSTGRES_PASSWORD: my_pass
+      POSTGRES_DB: my_db
+    volumes:
+      - ./migrations:/docker-entrypoint-initdb.d
