@@ -1,6 +1,0 @@
-INFO: 2023/07/06 21:35:10 logger.go:45: failed to initialize db: [dial tcp [::1]:5432: connectex: No connection could be made because the target machine actively refused it.]
-INFO: 2023/07/07 08:05:11 logger.go:37: Ошибка при инициализации RabbitConnection: [dial tcp [::1]:5672: connectex: No connection could be made because the target machine actively refused it.]
-INFO: 2023/07/07 08:05:11 logger.go:37: Ошибка при инициализации RabbitConnection: [dial tcp [::1]:5672: connectex: No connection could be made because the target machine actively refused it.]
-INFO: 2023/07/07 08:05:11 logger.go:37: Ошибка при инициализации RabbitConnection: [dial tcp [::1]:5672: connectex: No connection could be made because the target machine actively refused it.]
-INFO: 2023/07/15 21:08:28 logger.go:37: Ошибка при инициализации RabbitConnection: [dial tcp [::1]:5672: connectex: No connection could be made because the target machine actively refused it.]
-INFO: 2023/07/15 21:09:47 logger.go:37: Ошибка при инициализации RabbitConnection: [dial tcp [::1]:5672: connectex: No connection could be made because the target machine actively refused it.]

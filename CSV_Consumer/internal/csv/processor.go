@@ -1,17 +1,17 @@
 package csv
 
 import (
+	"github.com/sirupsen/logrus"
 	"github.com/tumbleweedd/intership/CSV_Consumer/internal/repository"
 	"github.com/tumbleweedd/intership/CSV_Consumer/pkg/broker/rabbit"
-	"github.com/tumbleweedd/intership/CSV_Consumer/pkg/logger"
 	"os"
 	"strings"
 )
 
-func Process(fileSource string, rabbitCon *rabbit.RabbitConnection, done <-chan struct{}, repo *repository.Repository, logger *logger.Logger) {
+func Process(fileSource string, rabbitCon *rabbit.RabbitConnection, done <-chan struct{}, repo *repository.Repository) {
 	file, err := os.Open(fileSource)
 	if err != nil {
-		logger.Infof("Ошибка os.Open: %s", err.Error())
+		logrus.Infof("Ошибка os.Open: %s", err.Error())
 		return
 	}
 	defer file.Close()
@@ -27,7 +27,7 @@ func Process(fileSource string, rabbitCon *rabbit.RabbitConnection, done <-chan 
 		default:
 			err := consumer.ConsumeQueue(queueName[2])
 			if err != nil {
-				logger.Infof("Ошибка при прослушивании очереди: %s", err.Error())
+				logrus.Infof("Ошибка при прослушивании очереди: %s", err.Error())
 			}
 		}
 	}

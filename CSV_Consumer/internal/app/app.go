@@ -1,15 +1,18 @@
 package app
 
 import (
+	"context"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"github.com/tumbleweedd/intership/CSV_Consumer/internal/csv"
 	"github.com/tumbleweedd/intership/CSV_Consumer/internal/repository"
 	"github.com/tumbleweedd/intership/CSV_Consumer/pkg/broker/rabbit"
-	postgres2 "github.com/tumbleweedd/intership/CSV_Consumer/pkg/database/postgres"
-	myLogger "github.com/tumbleweedd/intership/CSV_Consumer/pkg/logger"
+	"github.com/tumbleweedd/intership/CSV_Consumer/pkg/database/mongo"
+	"log"
 	"os"
 	"path/filepath"
 	"sync"
+	"time"
 )
 
 const (
@@ -19,10 +22,8 @@ const (
 
 func Run() {
 
-	logger := myLogger.NewLogger()
-
 	if err := initConfig(); err != nil {
-		logger.Fatalf("Ошибка инициализации конфига: %", err.Error())
+		logrus.Fatalf("ошибка инициализации конфига: %s", err.Error())
 	}
 
 	files, err := filePathWalkDir(rootDir)
@@ -35,29 +36,32 @@ func Run() {
 
 	wg := &sync.WaitGroup{}
 
-	db, err := postgres2.NewPostgresDB(&postgres2.Config{
-		PgPort:    viper.GetString("db.port"),
-		PgHost:    viper.GetString("db.host"),
-		PgDBName:  viper.GetString("db.dbname"),
-		PgUser:    viper.GetString("db.username"),
-		PgPwd:     viper.GetString("db.password"),
-		PgSSLMode: viper.GetString("db.sslmode"),
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	session, err := mongo.NewMongoConnection(ctx, &mongo.Config{
+		MongoHost:   viper.GetString("mongo_db.host"),
+		MongoPort:   viper.GetString("mongo_db.port"),
+		MongoDBName: viper.GetString("mongo_db.dbname"),
 	})
 	if err != nil {
-		logger.Fatalf("failed to initialize db: %s", err.Error())
+		log.Fatal(err)
+	}
+	if err != nil {
+		logrus.Fatalf("failed to initialize db: %s", err.Error())
 	}
 
-	repo := repository.NewStorage(db)
+	repo := repository.NewStorage(session.Client, viper.GetString("mongo_db.dbname"), viper.GetString("mongo_db.usrs_collection"))
 	initRabbitCon, err := rabbit.NewRabbitMQConnection(rabbitDSN)
 	defer initRabbitCon.Close()
 	if err != nil {
-		logger.Infof("Ошибка при инициализации RabbitConnection: %s", err.Error())
+		logrus.Infof("Ошибка при инициализации RabbitConnection: %s", err.Error())
 		return
 	}
 
 	for _, file := range files {
 		wg.Add(1)
-		go csv.Process(file, initRabbitCon, done, repo, logger)
+		go csv.Process(file, initRabbitCon, done, repo)
 	}
 
 	wg.Wait()

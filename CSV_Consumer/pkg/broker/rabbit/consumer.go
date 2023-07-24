@@ -44,7 +44,7 @@ func (c *Consumer) ConsumeQueue(queueName string) error {
 				log.Printf("Ошибка преобразования csv-like строки в структуру: %v", err)
 			}
 
-			if isAccepted, err := c.storeRepository.CheckForAccepted(user.Id); !isAccepted {
+			if isAccepted, err := c.storeRepository.CheckForAccepted(user.ID); !isAccepted {
 				if err := c.storeRepository.Save(user); err != nil {
 					log.Printf("Ошибка при сохранении пользователя в базу: %v", err)
 				}
@@ -79,11 +79,10 @@ func convertMessageToUser(message []byte) (*model.User, error) {
 	}
 
 	user := &model.User{
-		Id:          records[0],
-		FullName:    records[1],
-		Username:    records[2],
-		Email:       records[3],
-		PhoneNumber: records[4],
+		FullName: records[1],
+		Username: records[2],
+		Email:    records[3],
+		Phone:    records[4],
 	}
 
 	return user, err
