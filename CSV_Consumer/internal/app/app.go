@@ -8,7 +8,6 @@ import (
 	"github.com/tumbleweedd/intership/CSV_Consumer/internal/repository"
 	"github.com/tumbleweedd/intership/CSV_Consumer/pkg/broker/rabbit"
 	"github.com/tumbleweedd/intership/CSV_Consumer/pkg/database/mongo"
-	"log"
 	"os"
 	"path/filepath"
 	"sync"
@@ -45,7 +44,7 @@ func Run() {
 		MongoDBName: viper.GetString("mongo_db.dbname"),
 	})
 	if err != nil {
-		log.Fatal(err)
+		logrus.Fatal(err)
 	}
 	if err != nil {
 		logrus.Fatalf("failed to initialize db: %s", err.Error())

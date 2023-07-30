@@ -4,11 +4,13 @@ import (
 	"github.com/tumbleweedd/intership/CSV_Consumer/internal/model"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/bson"
+	"context"
 )
 
 type Store interface {
-	Save(user *model.User) error
-	CheckForAccepted(userId primitive.ObjectID) (bool, error)
+	Save(ctx context.Context, user *model.User) error
+	FindOne(ctx context.Context, userId primitive.ObjectID, proj bson.M) (*model.User, error)
 }
 
 type Repository struct {

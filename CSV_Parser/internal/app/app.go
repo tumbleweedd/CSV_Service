@@ -1,12 +1,12 @@
 package app
 
 import (
-	"github.com/tumbleweedd/intership/CSV_Parser/internal/csv"
 	"github.com/tumbleweedd/intership/CSV_Parser/pkg/rabbitmq"
 	"log"
 	"os"
 	"path/filepath"
 	"sync"
+	"github.com/tumbleweedd/intership/CSV_Parser/internal/parser/csv_parser"
 )
 
 const (
@@ -34,7 +34,7 @@ func Run() {
 
 	for _, file := range files {
 		wg.Add(1)
-		go csv.ParseCSV(file, initRabbitCon, wg, done)
+		go csv_parser.ParseCSV(file, initRabbitCon, wg, done)
 	}
 
 	wg.Wait()

@@ -6,21 +6,22 @@ import (
 )
 
 type Subscription struct {
-	ID        primitive.ObjectID `bson:"_id,omitempty"`
-	EventType string             `bson:"eventType"`
-	Active    bool               `bson:"active"`
-	CreatedAt time.Time          `bson:"created_at"`
-	UpdatedAt time.Time          `bson:"updated_at"`
+	ID        primitive.ObjectID `bson:"_id,omitempty" csv:"sub_id"`
+	EventType string             `bson:"event_type" csv:"event_type"`
+	Active    bool               `bson:"active" csv:"active"`
+	CreatedAt time.Time          `bson:"created_at" csv:"created_at"`
+	UpdatedAt time.Time          `bson:"updated_at" csv:"updated_at"`
 }
 
 type User struct {
-	ID            primitive.ObjectID `csv:"-" bson:"_id,omitempty"`
-	FullName      string             `csv:"full_name" bson:"full_name"`
-	Username      string             `bson:"username"`
-	Email         string             `bson:"email"`
-	Phone         string             `bson:"phone"`
-	Telegram      string             `bson:"telegram"`
-	Subscriptions []Subscription     `bson:"subscriptions"`
-	CreatedAt     time.Time          `bson:"created_at"`
-	UpdatedAt     time.Time          `bson:"updated_at"`
+	ID               primitive.ObjectID `bson:"_id,omitempty" csv:"user_id"`
+	FullName         string             `bson:"full_name" csv:"full_name"`
+	Username         string             `bson:"username" csv:"username"`
+	Email            string             `bson:"email" csv:"email"`
+	Phone            string             `bson:"phone" csv:"phone"`
+	Telegram         string             `bson:"telegram" csv:"telegram"`
+	Subscriptions    []Subscription     `bson:"subscriptions" csv:"subscriptions"`
+	CreatedAt        time.Time          `bson:"created_at" csv:"created_at"`
+	UpdatedAt        time.Time          `bson:"updated_at" csv:"updated_at"`
+	StatusOfDelivery bool               `bson:"status" csv:"status"`
 }

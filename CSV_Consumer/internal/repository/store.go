@@ -5,6 +5,8 @@ import (
 	"github.com/tumbleweedd/intership/CSV_Consumer/internal/model"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type StoreRepository struct {
@@ -18,27 +20,19 @@ func NewStoreRepository(client *mongo.Client, dbName, collectionName string) *St
 	}
 }
 
-func (sr *StoreRepository) Save(user *model.User) error {
-	//const query = `insert into users (id, full_name, username, email, phone_number) VALUES ($1, $2, $3, $4, $5)`
-	//
-	//_, err := sr.db.Exec(query, user.Id, user.FullName, user.Username, user.Email, user.PhoneNumber)
-	//
-	//return err
-	_, err := sr.db.InsertOne(context.TODO(), user)
+func (sr *StoreRepository) Save(ctx context.Context, user *model.User) error {
+	_, err := sr.db.InsertOne(ctx, user)
 
 	return err
 }
 
-func (sr *StoreRepository) CheckForAccepted(userId primitive.ObjectID) (bool, error) {
-	//var isAccepted bool
-	//
-	//const query = `select u.accepted from users u where u.id = $1 `
-	//
-	//row := sr.db.QueryRow(query, userId)
-	//
-	//err := row.Scan(&isAccepted)
-	//
-	//return isAccepted, err
+func (sr *StoreRepository) FindOne(ctx context.Context, userId primitive.ObjectID, proj bson.M) (*model.User, error) {
+	var user *model.User
+	query := bson.M{"_id": userId}
 
-	return false, nil
+	err := sr.db.FindOne(ctx, query, options.FindOne().SetProjection(proj)).Decode(&user)
+	if err != nil {
+		return nil, err
+	}
+	return user, nil
 }
